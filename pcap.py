@@ -7,18 +7,15 @@ SECTION_HEADER = Struct(
     'major_version' / Const(bytes.fromhex('0001')),
     'minor_version' / Const(bytes.fromhex('0000')),
     'section_length' / Const(bytes.fromhex('FFFFFFFFFFFFFFFF')),
-    #    'options' /,  unneeded
     'block_total_length' / Const(bytes.fromhex('0000001c'))
 )
 
 INTERFACE_DESCRIPTION = Struct(
     'block_type' / Const(bytes.fromhex('00000001')),
     'block_total_length' / Const(bytes.fromhex('00000014')),
-    # sniffles only supports ethernet
     'link_type' / Const(bytes.fromhex('0001')),
     'reserved' / Const(bytes.fromhex('0000')),
     'snap_len' / BytesInteger(4),
-    #    'options' /,  unneeded
     'block_total_length' / Const(bytes.fromhex('00000014'))
 )
 
@@ -30,7 +27,6 @@ ENHANCED_PACKET = AlignedStruct(4,
     'captured_packet_length' / BytesInteger(4),
     'original_packet_length' / BytesInteger(4),
     'packet_data' / Bytes(this.captured_packet_length),
-    #    'options' /, unneeded
     'block_total_length' / BytesInteger(4)
 )
 
