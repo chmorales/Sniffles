@@ -176,10 +176,8 @@ DNS_HEAD = Struct(
     'an_count' / BytesInteger(2),
     'ns_count' / BytesInteger(2),
     'ar_count' / BytesInteger(2),
-    # Probe(),
     '+Queries' / Array(this.qd_count, DNS_QUERY),
     '+Responses' / Array(this.an_count, DNS_RESPONSE),
-    # Probe(),
     '_end' / Tell,
     '_header_length' / Computed(this._end - this._start)
 )
