@@ -1,5 +1,6 @@
 from construct import *
 
+
 SECTION_HEADER = Struct(
     'block_type' / Const(bytes.fromhex('0A0D0D0A')),
     'block_total_length' / Const(bytes.fromhex('0000001c')),
@@ -22,7 +23,7 @@ INTERFACE_DESCRIPTION = Struct(
 ENHANCED_PACKET = AlignedStruct(4, 
     'block_type' / Const(bytes.fromhex('00000006')),
     'block_total_length' / BytesInteger(4),
-    'interface_id' / Const(bytes.fromhex('00000000')), # only support one IDB
+    'interface_id' / Const(bytes.fromhex('00000000')),
     'timestamp' / BytesInteger(8),
     'captured_packet_length' / BytesInteger(4),
     'original_packet_length' / BytesInteger(4),

@@ -28,42 +28,43 @@ class Sniffer:
         self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW,
                                     socket.ntohs(0x0003))
         self.socket.bind((interface, 0))
-        self.sniffed = []
-
-    def _printHex(self, data, outfile, protocols):
-        hexdump.hexdump(data)
-
-    def _printPcap(self, data, outfile, protocols):
-        time = calendar.timegm(datetime.now().timetuple()) * 10 ** 6 # uSeconds to seconds
-        printPcapEnhancedPacket(outfile, time, data)
-
-    def _printPlaintext(self, data, outfile, protocols):
-        packet = parsePacket(data)
-        packet_string = _packetString(packet, protocols)
-        if len(packet_string) > 0:
-            print(packet_string, end='\n\n', file=outfile)
 
     def sniff(self, outfile=stdout, time=0, dump=False, protocols=HEADERS):
         if dump:
-            printFunc = self._printHex
+            printFunc = _printHex
         elif outfile is stdout:
-            printFunc = self._printPlaintext
+            printFunc = _printPlaintext
         else:
-            printFunc = self._printPcap
+            printFunc = _printPcap
             printPcapHeaders(outfile, MAX_PACKET_SIZE)
         print('Sniffing ...')
-        while True:
-            data = self.socket.recvfrom(MAX_PACKET_SIZE)[0]
-            printFunc(data, outfile, protocols)
+        try:
+            with timeout(time):
+                while True:
+                    data = self.socket.recvfrom(MAX_PACKET_SIZE)[0]
+                    printFunc(data, outfile, protocols)
+        except TimeoutError:
+            if outfile is not stdout:
+                file.close()
 
 
 # Functions
 
+def _printHex(data, outfile, protocols):
+    hexdump.hexdump(data)
+
+def _printPcap(data, outfile, protocols):
+    time = calendar.timegm(datetime.now().timetuple()) * 10 ** 6 # uSeconds to seconds
+    printPcapEnhancedPacket(outfile, time, data)
+
+def _printPlaintext(data, outfile, protocols):
+    packet = parsePacket(data)
+    packet_string = _packetString(packet, protocols)
+    if len(packet_string) > 0:
+        print(packet_string, end='\n\n', file=outfile)
+
 def _normalPrint(key, value):
     return '{}={}'.format(key,value)
-
-def _pairString(key, value):
-    return PRINT_FUNCS.get(key[0], _normalPrint)(key, value)
 
 def _arrayPrint(key, value):
     elements = [key[1:] + ':', ]
@@ -79,6 +80,9 @@ PRINT_FUNCS = {
     '+': _arrayPrint,
     '*': _nestedPrint,
 }
+
+def _pairString(key, value):
+    return PRINT_FUNCS.get(key[0], _normalPrint)(key, value)
 
 def _headerString(header_name, header_dict):
     pairs = [_pairString(k,v) for k,v in header_dict.items() if k[0] != '_']
