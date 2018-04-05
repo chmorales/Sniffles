@@ -7,6 +7,7 @@ import argparse
 import calendar
 from datetime import datetime
 import hexdump
+import os
 import socket
 from sys import stdout
 
@@ -20,6 +21,10 @@ from timeout import timeout
 # Constants
 
 MAX_PACKET_SIZE = 65535
+
+TIMEOUT_STRING = 'for {} seconds'
+PCAP_STRING = 'and saving to {}'
+HEXDUMP_STRING = 'with hexdump'
 
 # Classes
 
@@ -37,7 +42,7 @@ class Sniffer:
         else:
             printFunc = _printPcap
             printPcapHeaders(outfile, MAX_PACKET_SIZE)
-        print('Sniffing ...')
+        print(_sniffString(outfile, time, dump))
         try:
             with timeout(time):
                 while True:
@@ -45,10 +50,20 @@ class Sniffer:
                     printFunc(data, outfile, protocols)
         except TimeoutError:
             if outfile is not stdout:
-                file.close()
+                outfile.close()
 
 
 # Functions
+
+def _sniffString(outfile, time, dump):
+    strings = ['Sniffing', ]
+    if time != 0:
+        strings.append(TIMEOUT_STRING.format(time))
+    if outfile is not stdout:
+        strings.append(PCAP_STRING.format(os.path.basename(outfile.name)))
+    if dump:
+        strings.append(HEXDUMP_STRING)
+    return ' '.join(strings) + '...'
 
 def _printHex(data, outfile, protocols):
     hexdump.hexdump(data)
@@ -118,7 +133,7 @@ if __name__ == '__main__':
 
     outfile = args['outfile']
     if outfile is not stdout:
-        outfile = open(args['outfile'], 'wb')
+        outfile = open(args['outfile'], 'w+b')
 
     sniffer = Sniffer(args['interface'])
     sniffer.sniff(outfile=outfile, time=args['timeout'],
